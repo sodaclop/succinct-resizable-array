@@ -61,7 +61,17 @@ public:
     return (static_cast<size_t>(dir_size-1) << log_buffer_capacity) + static_cast<size_t>(last_buffer_size);
   }
 
+  const T & get(const size_t i) const {
+    return pget(i);
+  }
+
   T & get(const size_t i) {
+    return pget(i);
+  }
+
+protected:
+
+  T & pget(const size_t i) const {
     assert (valid());
     assert (i < size());
 
@@ -73,6 +83,7 @@ public:
 
     return dir[big][little];
   }
+public:
     
   void push_back(const T & x) {
 #ifndef NDEBUG
@@ -207,8 +218,10 @@ protected:
     assert (0 == last_buffer_size);
     assert (not extra_buffer);
     const length_t buf_cap = buffer_capacity();
+
+    delete dir[dir_size-1];
   
-    for(length_t i = 0; i < dir_size; ++i) {
+    for(length_t i = 1; i < dir_size; ++i) {
       const auto k = dir_size-i-1;
       T * const oldbuf  = dir[k];
       dir[2*k]   = new T[buf_cap/2];
@@ -228,7 +241,7 @@ protected:
     //last_buffer_size /= 2;
     big_buffer = false;
     dir_size = 2*dir_size - 1;
-    delete[] dir[dir_size];
+    dir[dir_size-1] = new T[dir_capacity()];
   }
 
 
