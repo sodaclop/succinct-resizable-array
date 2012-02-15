@@ -1,11 +1,13 @@
-#ifndef SPACE_HPP
-#define SPACE_HPP
+#ifndef SUCCINCT_VECTOR_HPP
+#define SUCCINCT_VECTOR_HPP
 
 #include <cstdint>
 #include <cassert>
 
+namespace succinct {
+
 template<typename T>
-struct space {
+struct vector {
 
 protected:
   typedef std::uint32_t length_t;
@@ -44,7 +46,7 @@ protected:
     return true;
   }
 public:  
-  space() :
+  vector() :
     log_buffer_capacity(1),
     big_buffer(true),
     extra_buffer(false),
@@ -61,11 +63,11 @@ public:
     return (static_cast<size_t>(dir_size-1) << log_buffer_capacity) + static_cast<size_t>(last_buffer_size);
   }
 
-  const T & get(const size_t i) const {
+  const T & operator[](const size_t i) const {
     return pget(i);
   }
 
-  T & get(const size_t i) {
+  T & operator[](const size_t i) {
     return pget(i);
   }
 
@@ -245,6 +247,7 @@ protected:
   }
 
 
-};
+}; // struct vector
 
+} // namespace succinct
 #endif
