@@ -5,17 +5,18 @@
 
 using namespace std;
 
-#include "space.hpp"
+#include "succinct_vector.hpp"
 
 void qux() {
-  space<double> foo;
+  succinct::vector<double> foo;
   const unsigned limit = 52311;
   for(unsigned i = 0; i < limit; ++i) {
     foo.push_back(i);
     assert (foo.size() == i+1);
     for(unsigned j = 0; j <= sqrt(i); ++j) {
       const auto k = rand() % foo.size();
-      assert (k == foo.get(k));
+      assert (k == foo[k]);
+      foo[k] = static_cast<double>(k);
     }
     const unsigned little = min(static_cast<unsigned>(sqrt(limit)),i);
     for(unsigned j = 0; j <= little; ++j) {
