@@ -1,0 +1,9 @@
+A "succinct" container data structure is one that uses n + o(n) space.
+
+An "resizable array" is an array that allows appending or discarding an element at the end.
+
+The STL vector class is frequently implemented such that it will use at least 2n space when resizing.
+It is possible to reduce the space usage to n + O(sqrt(n)) without sacrificing O(1) index, append, and discard.
+See
+
+"Resizable Arrays in Optimal Time and Space", Brodnik et al.

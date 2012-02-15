@@ -1,3 +1,9 @@
+/*
+A modified Brodnik array following
+
+"An Empirical Evaluation of Extendible Arrays", Stelios Joannou and Rajeev Raman
+ */
+
 #ifndef SUCCINCT_VECTOR_HPP
 #define SUCCINCT_VECTOR_HPP
 
