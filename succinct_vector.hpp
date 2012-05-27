@@ -46,8 +46,15 @@ public:
   vector &  operator=(const vector &);
   size_t size() const;
   ~vector();
-  const T & operator[](const size_t i) const;
-  T & operator[](const size_t i);
+  const T & operator[](const size_t) const;
+  T & operator[](const size_t);
+  // Add an item to the end of the vector. O(1) amortized, Θ(n) worst
+  // case.
+  void push_back(const T &);
+  // Delete an item to the end of the vector. The vector must be
+  // non-empty when this function is called. O(1) amortized, Θ(n)
+  // worst case.
+  void pop_back();
   
 protected:
 
@@ -153,12 +160,6 @@ protected:
     delete[] dir;
   }
 
-public:  
-
-  // Default constructor: size 0, capacity 2, max capacity before rebuild 4
-
-protected:
-
   // Returns a reference to the ith item in the vector. Note that this
   // is actually const-unsafe - having a reference to that item allows
   // setting the value of that item. This is wrapped safely by the
@@ -179,96 +180,6 @@ protected:
 
     return dir[big][little];
   }
-
-public:
-
-  // Add an item to the end of the vector. O(1) amortized, Θ(n) worst
-  // case.
-  void 
-  push_back(const T & x) {
-#ifndef NDEBUG
-    const size_t old_size = size();
-#endif
-    assert_valid();
-
-    // The last_buffer_size is less than buffer_capactiy as an
-    // invariant of the data structure.
-    assert (last_buffer_size < buffer_capacity());
-    dir[dir_size-1][last_buffer_size] = x;
-    // After this statement, the data structure invariants may no
-    // longer be valid:
-    ++last_buffer_size;
-
-    if (last_buffer_size == buffer_capacity()) {
-      if (not extra_buffer) {
-	if (dir_size == dir_capacity()) {
-	  // We don't have an extra buffer, and we don't have any room
-	  // to add another buffer to the directory. We must rebuild:
-	  upsize();
-	}
-	assert (dir_size < dir_capacity());
-	dir[dir_size] = new T[buffer_capacity()];
-	// At this point, we have an extra buffer, but we are just
-	// about to put it in the directory proper, thus making it not
-	// "extra" at all.
-	
-	// extra_buffer = true;
-      }
-      // Expand the directory, using the extra buffer as a new empty buffer
-      ++dir_size;
-      extra_buffer = false;
-      last_buffer_size = 0;
-    }
-    
-    assert_valid();
-    assert (size() == old_size + 1);
-  }
-
-  // Delete an item to the end of the vector. The vector must be
-  // non-empty when this function is called. O(1) amortized, Θ(n)
-  // worst case.
-  void 
-  pop_back() {
-#ifndef NDEBUG
-    const size_t old_size = size();
-#endif
-    assert_valid();
-    // This is actually a precondition of pop_back(). If it fails,
-    // this is probably a user error, not a library error.
-    assert (size() > 0);
-
-    if (0 == last_buffer_size) {
-      // The last buffer is about to become the extra buffer.
-      assert (not extra_buffer);
-      last_buffer_size = buffer_capacity() - 1;
-      --dir_size;
-      extra_buffer = true;
-    } else {
-      --last_buffer_size;
-      if ((0 == last_buffer_size)
-	  and extra_buffer) {
-	// Since the last buffer now has 0 items, to preserve the
-	// invariants of the structure, we cannot have an extra
-	// buffer. We cannot turn this last buffer with 0 items into
-	// an empty buffer because the structure invariants ensure
-	// that last_buffer_size < buffer_capacity().
-	delete[] dir[dir_size];
-	extra_buffer = false;
-
-      }
-    }
-    if ((dir_size + (extra_buffer ? 1 : 0)) * 4 <= dir_capacity()) {
-      // If the inequality was strict, we must have been equal before
-      // this push_back, which means we should have already downsized.
-      assert ((dir_size + (extra_buffer ? 1 : 0)) * 4 == dir_capacity());
-      downsize();
-    }
-
-    assert_valid();
-    assert (size() +1 == old_size);
-  }
-
-protected:
 
   // upsize gives gome empty space in the dir between dir_size and
   // dir_capacity
@@ -401,8 +312,7 @@ protected:
 
 }; // struct vector
 
-
-  //default constructor
+// Default constructor: size 0, capacity 2, max capacity before rebuild 4
 template<typename T> 
 vector<T>::vector() :
   dir(new T*[1]),
@@ -470,6 +380,95 @@ template<typename T>
 T & 
 vector<T>::operator[](const size_t i) {
   return pget(i);
+}
+
+// Add an item to the end of the vector. O(1) amortized, Θ(n) worst
+// case.
+
+template<typename T>
+void 
+vector<T>::push_back(const T & x) {
+#ifndef NDEBUG
+  const size_t old_size = size();
+#endif
+  assert_valid();
+  
+  // The last_buffer_size is less than buffer_capactiy as an
+  // invariant of the data structure.
+  assert (last_buffer_size < buffer_capacity());
+  dir[dir_size-1][last_buffer_size] = x;
+  // After this statement, the data structure invariants may no
+  // longer be valid:
+  ++last_buffer_size;
+  
+  if (last_buffer_size == buffer_capacity()) {
+    if (not extra_buffer) {
+      if (dir_size == dir_capacity()) {
+	// We don't have an extra buffer, and we don't have any room
+	// to add another buffer to the directory. We must rebuild:
+	upsize();
+      }
+      assert (dir_size < dir_capacity());
+      dir[dir_size] = new T[buffer_capacity()];
+      // At this point, we have an extra buffer, but we are just
+      // about to put it in the directory proper, thus making it not
+      // "extra" at all.
+      
+      // extra_buffer = true;
+    }
+    // Expand the directory, using the extra buffer as a new empty buffer
+    ++dir_size;
+    extra_buffer = false;
+    last_buffer_size = 0;
+  }
+  
+  assert_valid();
+  assert (size() == old_size + 1);
+}
+
+// Delete an item to the end of the vector. The vector must be
+// non-empty when this function is called. O(1) amortized, Θ(n)
+// worst case.
+template<typename T>
+void 
+vector<T>::pop_back() {
+#ifndef NDEBUG
+  const size_t old_size = size();
+#endif
+  assert_valid();
+    // This is actually a precondition of pop_back(). If it fails,
+    // this is probably a user error, not a library error.
+  assert (size() > 0);
+  
+  if (0 == last_buffer_size) {
+    // The last buffer is about to become the extra buffer.
+    assert (not extra_buffer);
+    last_buffer_size = buffer_capacity() - 1;
+    --dir_size;
+    extra_buffer = true;
+  } else {
+    --last_buffer_size;
+    if ((0 == last_buffer_size)
+	and extra_buffer) {
+      // Since the last buffer now has 0 items, to preserve the
+      // invariants of the structure, we cannot have an extra
+      // buffer. We cannot turn this last buffer with 0 items into
+      // an empty buffer because the structure invariants ensure
+      // that last_buffer_size < buffer_capacity().
+      delete[] dir[dir_size];
+      extra_buffer = false;
+      
+    }
+  }
+  if ((dir_size + (extra_buffer ? 1 : 0)) * 4 <= dir_capacity()) {
+    // If the inequality was strict, we must have been equal before
+    // this push_back, which means we should have already downsized.
+    assert ((dir_size + (extra_buffer ? 1 : 0)) * 4 == dir_capacity());
+    downsize();
+  }
+  
+  assert_valid();
+  assert (size() +1 == old_size);
 }
 
 
