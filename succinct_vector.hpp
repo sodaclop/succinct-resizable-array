@@ -36,9 +36,21 @@ namespace succinct {
 
 template<typename T>
 struct vector {
+public:
+  typedef std::size_t size_t;
+  //default constructor:
+  vector();
+  // copy constructor:
+  vector(const vector &);
+  // assignment operator
+  vector &  operator=(const vector &);
+  size_t size() const;
+  ~vector();
+  const T & operator[](const size_t i) const;
+  T & operator[](const size_t i);
   
 protected:
-  typedef std::size_t size_t;
+
   // Since the buffers and the buffer index have size about \sqrt{n},
   // as long as size_t is uint64_t or smaller, we only need half as
   // many bits to decribe locations in the buffer and buffer index as
@@ -144,67 +156,6 @@ protected:
 public:  
 
   // Default constructor: size 0, capacity 2, max capacity before rebuild 4
-  vector() :
-    dir(new T*[1]),
-    dir_size(1),
-    last_buffer_size(0),
-    log_buffer_capacity(1),
-    big_buffer(true),
-    extra_buffer(false)
-  {
-    dir[0] = new T[buffer_capacity()];
-    assert_valid();
-  }
-  
-  // copy constructor
-  vector(const vector & that) :
-    dir(new T*[that.dir_capacity()]),
-    dir_size(that.dir_size),
-    last_buffer_size(that.last_buffer_size),
-    log_buffer_capacity(that.log_buffer_capacity),
-    big_buffer(that.big_buffer),
-    extra_buffer(that.extra_buffer)
-  {
-    construct(that);
-  }
-
-  // assignment operator
-  vector &
-  operator=(const vector & that) {
-    destuct();
-
-    dir = new T*[that.dir_capacity()];
-    dir_size = that.dir_size;
-    last_buffer_size = that.last_buffer_size;
-    log_buffer_capacity = that.log_buffer_capacity;
-    big_buffer = that.big_buffer;
-    extra_buffer = that.extra_buffer;
-
-    construct(that);
-    return *this;
-  }
-
-  size_t 
-  size() const {
-    assert (dir_size > 0);
-    return 
-      (static_cast<size_t>(dir_size-1) << log_buffer_capacity) 
-      + static_cast<size_t>(last_buffer_size);
-  }
-
-  ~vector() {
-    destuct();
-  }
-
-  const T & 
-  operator[](const size_t i) const {
-    return pget(i);
-  }
-
-  T & 
-  operator[](const size_t i) {
-    return pget(i);
-  }
 
 protected:
 
@@ -449,6 +400,78 @@ protected:
 
 
 }; // struct vector
+
+
+  //default constructor
+template<typename T> 
+vector<T>::vector() :
+  dir(new T*[1]),
+  dir_size(1),
+  last_buffer_size(0),
+  log_buffer_capacity(1),
+  big_buffer(true),
+  extra_buffer(false)
+{
+  dir[0] = new T[buffer_capacity()];
+  assert_valid();
+}
+  
+  // copy constructor
+template<typename T> 
+vector<T>::vector(const vector<T> & that) :
+  dir(new T*[that.dir_capacity()]),
+  dir_size(that.dir_size),
+  last_buffer_size(that.last_buffer_size),
+  log_buffer_capacity(that.log_buffer_capacity),
+  big_buffer(that.big_buffer),
+  extra_buffer(that.extra_buffer)
+{
+  construct(that);
+}
+
+// assignment operator
+template<typename T> 
+vector<T> &
+vector<T>::operator=(const vector<T> & that) {
+  destuct();
+  
+  dir = new T*[that.dir_capacity()];
+  dir_size = that.dir_size;
+  last_buffer_size = that.last_buffer_size;
+  log_buffer_capacity = that.log_buffer_capacity;
+  big_buffer = that.big_buffer;
+  extra_buffer = that.extra_buffer;
+  
+  construct(that);
+  return *this;
+}
+
+template<typename T> 
+size_t 
+vector<T>::size() const {
+  assert (dir_size > 0);
+  return 
+    (static_cast<size_t>(dir_size-1) << log_buffer_capacity) 
+    + static_cast<size_t>(last_buffer_size);
+}
+
+template<typename T> 
+vector<T>::~vector() {
+  destuct();
+}
+
+template<typename T> 
+const T & 
+vector<T>::operator[](const size_t i) const {
+  return pget(i);
+}
+
+template<typename T> 
+T & 
+vector<T>::operator[](const size_t i) {
+  return pget(i);
+}
+
 
 } // namespace succinct
 #endif
